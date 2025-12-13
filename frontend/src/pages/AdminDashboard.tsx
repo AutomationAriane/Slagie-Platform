@@ -2,12 +2,15 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
     BarChart3, Users, BookOpen, TrendingUp, LogOut,
-    UserPlus, Activity, CheckCircle, XCircle, Plus
+    FileCheck, Activity, CheckCircle, XCircle
 } from 'lucide-react';
+import { useState } from 'react';
+import ExamenManager from './admin/ExamenManager';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [activeView, setActiveView] = useState('overview');
 
     const kpiCards = [
         {
@@ -19,10 +22,10 @@ const AdminDashboard = () => {
             bg: 'bg-[#0A66FF]/10'
         },
         {
-            title: 'Nieuwe Aanmeldingen Vandaag',
-            value: '23',
-            badge: 'Nieuw',
-            icon: UserPlus,
+            title: 'Examens Live',
+            value: '3',
+            badge: 'Actief',
+            icon: FileCheck,
             color: 'text-[#FF7A00]',
             bg: 'bg-[#FF7A00]/10'
         },
@@ -37,10 +40,11 @@ const AdminDashboard = () => {
     ];
 
     const menuItems = [
-        { name: 'Overzicht', icon: BarChart3, active: true },
-        { name: 'Studenten Beheer', icon: Users, active: false },
-        { name: 'Vragenbank', icon: BookOpen, active: false },
-        { name: 'Slagingspercentages', icon: Activity, active: false },
+        { name: 'Overzicht', icon: BarChart3, view: 'overview' },
+        { name: 'Examen Beheer', icon: FileCheck, view: 'exams' },
+        { name: 'Studenten Beheer', icon: Users, view: 'students' },
+        { name: 'Vragenbank', icon: BookOpen, view: 'questions' },
+        { name: 'Rapportages', icon: Activity, view: 'reports' },
     ];
 
     const examResults = [
@@ -50,6 +54,11 @@ const AdminDashboard = () => {
         { name: 'Tim van Dijk', date: '12 Dec 2025', score: '44/50', percentage: 88, status: 'Geslaagd' },
         { name: 'Lisa Mulder', date: '11 Dec 2025', score: '39/50', percentage: 78, status: 'Gezakt' },
     ];
+
+    // Render Exam Manager if selected
+    if (activeView === 'exams') {
+        return <ExamenManager />;
+    }
 
     return (
         <div className="min-h-screen flex bg-gray-50">
@@ -76,9 +85,10 @@ const AdminDashboard = () => {
                     {menuItems.map((item) => (
                         <button
                             key={item.name}
-                            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${item.active
-                                ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            onClick={() => setActiveView(item.view)}
+                            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${activeView === item.view
+                                    ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             <item.icon size={22} />
@@ -91,7 +101,7 @@ const AdminDashboard = () => {
                 <div className="p-4 border-t border-white/10">
                     <div className="mb-3 px-4 py-3 bg-white/5 rounded-xl">
                         <p className="text-sm text-gray-400">Beheerder</p>
-                        <p className="font-medium text-white truncate">{user?.name || 'Admin'}</p>
+                        <p className="font-medium text-white truncate">{user?.email || 'Admin'}</p>
                     </div>
                     <button
                         onClick={logout}
@@ -106,20 +116,11 @@ const AdminDashboard = () => {
             {/* Main Content */}
             <main className="flex-1 ml-72 p-8">
                 {/* Header */}
-                <div className="mb-8 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-[#1F2937] mb-2">
-                            Beheerderspaneel
-                        </h1>
-                        <p className="text-gray-600">Overzicht van je Slagie platform</p>
-                    </div>
-                    <button
-                        onClick={() => navigate('/admin/create-exam')}
-                        className="px-6 py-3 bg-[#FF7A00] text-white rounded-xl font-bold hover:bg-[#E56D00] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105"
-                    >
-                        <Plus size={20} />
-                        Nieuw Examen Aanmaken
-                    </button>
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-[#1F2937] mb-2">
+                        Beheerderspaneel
+                    </h1>
+                    <p className="text-gray-600">Overzicht van je Slagie platform</p>
                 </div>
 
                 {/* KPI Cards */}

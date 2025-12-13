@@ -1,7 +1,30 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Table
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
+
+# ==================== USER & AUTH MODELS ====================
+
+class User(Base):
+    """Gebruiker (Admin of Student)"""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(50), default="student")  # 'admin' or 'student'
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relaties
+    quiz_attempts = relationship("QuizAttempt", back_populates="user")
+    created_exams = relationship("Exam", back_populates="creator", foreign_keys="Exam.created_by")
+
+    def __repr__(self):
+        return f"<User(id={self.id}, email={self.email}, role={self.role})>"
+
+
+# ==================== PRACTICE QUESTIONS (Topic System) ====================
 
 class Topic(Base):
     """CBR Thema (Categorie van vragen)"""
@@ -36,16 +59,16 @@ class SubTopic(Base):
 
 
 class Question(Base):
-    """Examen vraag"""
+    """Practice vraag (voor oefen-modus)"""
     __tablename__ = "questions"
     
     id = Column(Integer, primary_key=True, index=True)
-    question_number = Column(Integer, nullable=False)  # Vraagnummer uit Excel
+    question_number = Column(Integer, nullable=False)
     subtopic_id = Column(Integer, ForeignKey("subtopics.id"), nullable=False)
-    text = Column(Text, nullable=False)  # Vraagtekst
-    question_type = Column(String(50), nullable=True)  # Vraagtype
-    image_url = Column(String(255), nullable=True)  # Full image URL
-    theme = Column(String(255), nullable=True)  # CBR Thema (bv. "Voorrang", "Milieu")
+    text = Column(Text, nullable=False)
+    question_type = Column(String(50), nullable=True)
+    image_url = Column(String(255), nullable=True)
+    theme = Column(String(255), nullable=True)
     
     # Relaties
     subtopic = relationship("SubTopic", back_populates="questions")
@@ -56,39 +79,20 @@ class Question(Base):
 
 
 class AnswerOption(Base):
-    """Antwoordoptie (A, B, C, of D)"""
+    """Antwoordoptie voor practice vragen (A, B, C, D)"""
     __tablename__ = "answer_options"
     
     id = Column(Integer, primary_key=True, index=True)
     question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)
-    option_letter = Column(String(1), nullable=False)  # A, B, C, D
+    option_letter = Column(String(1), nullable=False)
     text = Column(Text, nullable=False)
     is_correct = Column(Boolean, default=False)
     
     # Relaties
     question = relationship("Question", back_populates="answer_options")
     
-    
     def __repr__(self):
         return f"<AnswerOption(id={self.id}, option={self.option_letter}, correct={self.is_correct})>"
-
-
-class User(Base):
-    """Gebruiker (Admin of Student)"""
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(String(50), default="student")  # 'admin' or 'student'
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relaties
-    quiz_attempts = relationship("QuizAttempt", back_populates="user")
-
-    def __repr__(self):
-        return f"<User(id={self.id}, email={self.email}, role={self.role})>"
 
 
 class QuizAttempt(Base):
@@ -105,13 +109,23 @@ class QuizAttempt(Base):
 
     # Relaties
     user = relationship("User", back_populates="quiz_attempts")
-    exam = relationship("Topic")  # Unidirectional is fine for now
+    exam = relationship("Topic")
 
     def __repr__(self):
         return f"<QuizAttempt(id={self.id}, user={self.user_id}, score={self.score}/{self.total_questions})>"
 
 
-# ==================== EXAM MANAGEMENT MODELS ====================
+# ==================== EXAM SYSTEM (Admin-Created Exams) ====================
+
+# Many-to-Many association table
+exam_questions_association = Table(
+    'exam_questions_link',
+    Base.metadata,
+    Column('exam_id', Integer, ForeignKey('exams.id'), primary_key=True),
+    Column('question_id', Integer, ForeignKey('exam_question_items.id'), primary_key=True),
+    Column('order', Integer, default=0)
+)
+
 
 class Exam(Base):
     """Admin-created exams with publish/draft functionality"""
@@ -120,14 +134,14 @@ class Exam(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text)
-    cover_image = Column(String(500))  # URL or file path
+    cover_image = Column(String(500))
     
     # Exam settings
     time_limit = Column(Integer)  # Minutes
     passing_score = Column(Integer)  # Percentage (e.g., 86)
     category = Column(String(100))  # "Theorie", "Gevaarherkenning", etc.
     
-    # CRITICAL: Publish/Draft status
+    # Publish/Draft status
     is_published = Column(Boolean, default=False, nullable=False)
     
     # Metadata
@@ -137,49 +151,55 @@ class Exam(Base):
     published_at = Column(DateTime(timezone=True))
     
     # Relationships
-    questions = relationship("ExamQuestion", back_populates="exam", cascade="all, delete-orphan")
-    creator = relationship("User", foreign_keys=[created_by])
+    questions = relationship(
+        "ExamQuestionItem",
+        secondary=exam_questions_association,
+        back_populates="exams"
+    )
+    creator = relationship("User", back_populates="created_exams", foreign_keys=[created_by])
     
     def __repr__(self):
         status = "Published" if self.is_published else "Draft"
         return f"<Exam(id={self.id}, title={self.title}, status={status})>"
 
 
-class ExamQuestion(Base):
+class ExamQuestionItem(Base):
     """Questions belonging to admin-created exams"""
-    __tablename__ = "exam_questions"
+    __tablename__ = "exam_question_items"
     
     id = Column(Integer, primary_key=True, index=True)
-    exam_id = Column(Integer, ForeignKey("exams.id"), nullable=False)
     
     # Question content
     question_text = Column(Text, nullable=False)
     question_image = Column(String(500))  # Optional image URL
-    question_type = Column(String(50), default="multiple_choice")  # "multiple_choice", "true_false"
-    order = Column(Integer, default=0)  # Order in exam
+    question_type = Column(String(50), default="multiple_choice")
     
     # Relationships
-    exam = relationship("Exam", back_populates="questions")
-    answers = relationship("ExamAnswer", back_populates="question", cascade="all, delete-orphan")
+    exams = relationship(
+        "Exam",
+        secondary=exam_questions_association,
+        back_populates="questions"
+    )
+    answers = relationship("ExamAnswerOption", back_populates="question", cascade="all, delete-orphan")
     
     def __repr__(self):
-        return f"<ExamQuestion(id={self.id}, exam_id={self.exam_id}, text={self.question_text[:30]}...)>"
+        return f"<ExamQuestionItem(id={self.id}, text={self.question_text[:30]}...)>"
 
 
-class ExamAnswer(Base):
+class ExamAnswerOption(Base):
     """Answer options for exam questions"""
-    __tablename__ = "exam_answers"
+    __tablename__ = "exam_answer_options"
     
     id = Column(Integer, primary_key=True, index=True)
-    question_id = Column(Integer, ForeignKey("exam_questions.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("exam_question_items.id"), nullable=False)
     
     answer_text = Column(String(500), nullable=False)
     is_correct = Column(Boolean, default=False, nullable=False)
-    order = Column(Integer, default=0)  # Order of answer (A, B, C, D)
+    order = Column(Integer, default=0)  # Order of answer (0=A, 1=B, 2=C, 3=D)
     
     # Relationship
-    question = relationship("ExamQuestion", back_populates="answers")
+    question = relationship("ExamQuestionItem", back_populates="answers")
     
     def __repr__(self):
         status = "✓" if self.is_correct else "✗"
-        return f"<ExamAnswer(id={self.id}, text={self.answer_text[:20]}... {status})>"
+        return f"<ExamAnswerOption(id={self.id}, text={self.answer_text[:20]}... {status})>"
