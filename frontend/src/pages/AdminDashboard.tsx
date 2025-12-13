@@ -1,218 +1,221 @@
-import React from 'react';
-import {
-    BarChart3, Users, BookOpen, Settings, LogOut,
-    Search, Bell, TrendingUp, Award, Clock
-} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import {
+    BarChart3, Users, BookOpen, TrendingUp, LogOut,
+    UserPlus, Activity, CheckCircle, XCircle
+} from 'lucide-react';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
 
-    // Stats data met nieuwe iconen en kleuren
-    const stats = [
+    const kpiCards = [
         {
-            title: 'Behaalde Competenties',
-            value: '1,248',
-            trend: '+12%',
-            icon: Award,
-            // Amber logic: bg-amber-100 text-amber-600
-            bg: 'bg-amber-100',
-            color: 'text-amber-600'
-        },
-        {
-            title: 'Openstaande Cursussen',
-            value: '45',
-            trend: '+3',
-            icon: BookOpen,
-            bg: 'bg-amber-100',
-            color: 'text-amber-600'
-        },
-        {
-            title: 'Actieve Studenten',
-            value: '892',
-            trend: '+8%',
+            title: 'Totaal Studenten',
+            value: '1,247',
+            change: '+47 deze maand',
             icon: Users,
-            bg: 'bg-amber-100',
-            color: 'text-amber-600'
+            color: 'text-[#0A66FF]',
+            bg: 'bg-[#0A66FF]/10'
+        },
+        {
+            title: 'Nieuwe Aanmeldingen Vandaag',
+            value: '23',
+            badge: 'Nieuw',
+            icon: UserPlus,
+            color: 'text-[#FF7A00]',
+            bg: 'bg-[#FF7A00]/10'
+        },
+        {
+            title: 'Gemiddeld Slagingspercentage',
+            value: '84%',
+            change: '+3% vs vorige maand',
+            icon: TrendingUp,
+            color: 'text-[#16A34A]',
+            bg: 'bg-[#16A34A]/10'
         },
     ];
 
+    const menuItems = [
+        { name: 'Overzicht', icon: BarChart3, active: true },
+        { name: 'Studenten Beheer', icon: Users, active: false },
+        { name: 'Vragenbank', icon: BookOpen, active: false },
+        { name: 'Slagingspercentages', icon: Activity, active: false },
+    ];
+
+    const examResults = [
+        { name: 'Emma de Vries', date: '13 Dec 2025', score: '46/50', percentage: 92, status: 'Geslaagd' },
+        { name: 'Lars Jansen', date: '13 Dec 2025', score: '41/50', percentage: 82, status: 'Gezakt' },
+        { name: 'Sophie Bakker', date: '12 Dec 2025', score: '48/50', percentage: 96, status: 'Geslaagd' },
+        { name: 'Tim van Dijk', date: '12 Dec 2025', score: '44/50', percentage: 88, status: 'Geslaagd' },
+        { name: 'Lisa Mulder', date: '11 Dec 2025', score: '39/50', percentage: 78, status: 'Gezakt' },
+    ];
+
     return (
-        <div className="min-h-screen bg-gray-50 flex font-sans">
-            {/* Sidebar (Left) - slate-900 */}
-            <aside className="w-72 bg-slate-900 text-white fixed h-full z-20 flex flex-col transition-all duration-300">
-                {/* Logo Area */}
-                <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                        AZ
+        <div className="min-h-screen flex bg-gray-50">
+            {/* Sidebar */}
+            <aside className="w-72 bg-[#0F172A] fixed h-full flex flex-col">
+                {/* Logo */}
+                <div className="p-6 border-b border-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[#0A66FF] flex items-center justify-center">
+                            <span className="text-white font-bold text-lg">S</span>
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold">
+                                <span className="text-[#0A66FF]">Slag</span>
+                                <span className="text-[#FF7A00]">ie</span>
+                            </h1>
+                            <p className="text-xs text-gray-500">Beheeromgeving</p>
+                        </div>
                     </div>
-                    <span className="font-bold text-xl tracking-wide">Ariane Admin</span>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-2 mt-4">
-                    {[
-                        { name: 'Home', icon: BarChart3, active: true },
-                        { name: 'Mijn Voortgang', icon: TrendingUp, active: false },
-                        { name: 'Cursussen', icon: BookOpen, active: false },
-                        { name: 'Competenties', icon: Award, active: false },
-                        { name: 'Instellingen', icon: Settings, active: false },
-                    ].map((item) => (
+                <nav className="flex-1 p-4 space-y-2">
+                    {menuItems.map((item) => (
                         <button
                             key={item.name}
-                            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-r-none rounded-l-xl transition-all duration-200 group ${item.active
-                                    ? 'bg-slate-800 text-amber-500 border-r-4 border-amber-500' // Active state
-                                    : 'text-slate-400 hover:text-white hover:bg-slate-800' // Inactive state
+                            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${item.active
+                                    ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
-                            <item.icon size={22} className={item.active ? 'text-amber-500' : 'text-slate-400 group-hover:text-white'} />
-                            <span className="font-medium text-sm">{item.name}</span>
+                            <item.icon size={22} />
+                            <span className="font-medium">{item.name}</span>
                         </button>
                     ))}
                 </nav>
 
-                {/* Logout Area */}
-                <div className="p-4 border-t border-slate-800">
+                {/* User Section */}
+                <div className="p-4 border-t border-white/10">
+                    <div className="mb-3 px-4 py-3 bg-white/5 rounded-xl">
+                        <p className="text-sm text-gray-400">Beheerder</p>
+                        <p className="font-medium text-white truncate">{user?.name || 'Admin'}</p>
+                    </div>
                     <button
                         onClick={logout}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-xl transition-all font-medium"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-400 hover:bg-white/5 rounded-xl transition-all"
                     >
                         <LogOut size={20} />
-                        Uitloggen
+                        <span className="font-medium">Uitloggen</span>
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
-            <main className="flex-1 ml-72">
-                {/* Topbar (Header) - bg-white shadow-sm */}
-                <header className="bg-white shadow-sm px-8 py-4 flex justify-between items-center sticky top-0 z-10">
-                    {/* Breadcrumbs / Title */}
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-800">Dashboard</h2>
-                        <nav className="flex text-sm text-slate-500 mt-1">
-                            <span>Admin</span>
-                            <span className="mx-2">/</span>
-                            <span className="text-amber-600 font-medium">Home</span>
-                        </nav>
-                    </div>
+            {/* Main Content */}
+            <main className="flex-1 ml-72 p-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-[#1F2937] mb-2">
+                        Beheerderspaneel
+                    </h1>
+                    <p className="text-gray-600">Overzicht van je Slagie platform</p>
+                </div>
 
-                    {/* Right Side Actions */}
-                    <div className="flex items-center gap-6">
-                        {/* Search Bar */}
-                        <div className="hidden md:flex items-center gap-3 bg-gray-100 rounded-lg px-4 py-2.5 w-64 border border-transparent focus-within:border-amber-500 focus-within:bg-white transition-all">
-                            <Search className="text-slate-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Zoeken..."
-                                className="bg-transparent border-none outline-none text-sm w-full text-slate-700 placeholder-slate-400"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <button className="relative p-2 text-slate-500 hover:bg-gray-100 rounded-full transition-colors">
-                                <Bell size={22} />
-                                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                            </button>
-
-                            {/* Profile Dropdown Trigger */}
-                            <div className="flex items-center gap-3 pl-6 border-l border-gray-200 cursor-pointer">
-                                <div className="text-right hidden sm:block">
-                                    <p className="text-sm font-bold text-slate-900 leading-tight">{user?.name || 'Admin User'}</p>
-                                    <p className="text-xs text-slate-500 capitalize">{user?.role || 'Administrator'}</p>
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {kpiCards.map((card, i) => (
+                        <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className={`p-3 rounded-xl ${card.bg}`}>
+                                    <card.icon size={24} className={card.color} />
                                 </div>
-                                <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center border-2 border-white shadow-sm text-slate-600 font-bold">
-                                    {user?.name?.charAt(0) || 'A'}
-                                </div>
+                                {card.badge && (
+                                    <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-[#FF7A00] text-white">
+                                        {card.badge}
+                                    </span>
+                                )}
                             </div>
+                            <h3 className="text-gray-500 font-medium text-sm mb-1">{card.title}</h3>
+                            <p className="text-3xl font-bold text-[#1F2937] mb-2">{card.value}</p>
+                            {card.change && (
+                                <p className="text-sm text-gray-500">{card.change}</p>
+                            )}
                         </div>
+                    ))}
+                </div>
+
+                {/* Exam Results Table */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100">
+                        <h3 className="text-xl font-bold text-[#1F2937]">
+                            Laatste Examenresultaten
+                        </h3>
                     </div>
-                </header>
-
-                {/* Dashboard Inner Content */}
-                <div className="p-8 max-w-7xl mx-auto">
-
-                    {/* Welcome Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8 relative overflow-hidden">
-                        <div className="relative z-10">
-                            <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                                Welkom terug, <span className="text-amber-600">{user?.name || 'Beheerder'}</span>!
-                            </h1>
-                            <p className="text-slate-500 max-w-2xl">
-                                Je hebt 3 nieuwe meldingen en 2 openstaande taken voor vandaag.
-                                Bekijk hieronder je voortgang en recente activiteiten.
-                            </p>
-                        </div>
-                        {/* Subtiele decoratie rechts - optioneel */}
-                        <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-amber-50 to-transparent opacity-50 z-0"></div>
-                    </div>
-
-                    {/* Quick Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        {stats.map((stat, i) => (
-                            <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={`p-3.5 rounded-xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
-                                        <stat.icon size={24} />
-                                    </div>
-                                    {stat.trend && (
-                                        <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${stat.trend.startsWith('+')
-                                                ? 'bg-green-50 text-green-700'
-                                                : 'bg-red-50 text-red-700'
-                                            }`}>
-                                            {stat.trend}
-                                        </span>
-                                    )}
-                                </div>
-                                <h3 className="text-slate-500 font-medium text-sm mb-1">{stat.title}</h3>
-                                <div className="flex items-baseline gap-2">
-                                    <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Example Placeholder Content Area */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Recent Activity Placeholder */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 min-h-[300px]">
-                            <h3 className="font-bold text-lg text-slate-900 mb-4 flex items-center gap-2">
-                                <Clock size={20} className="text-amber-500" />
-                                Recente Activiteit
-                            </h3>
-                            <div className="space-y-4">
-                                {[1, 2, 3].map((_, idx) => (
-                                    <div key={idx} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors border-b border-gray-50 last:border-0">
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex-shrink-0"></div>
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-900">Nieuwe inschrijving cursus Wondzorg</p>
-                                            <p className="text-xs text-slate-500">2 uur geleden</p>
-                                        </div>
-                                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Naam
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Datum
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Score
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Percentage
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {examResults.map((result, idx) => (
+                                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-[#0A66FF]/10 flex items-center justify-center">
+                                                    <span className="font-bold text-[#0A66FF]">
+                                                        {result.name.charAt(0)}
+                                                    </span>
+                                                </div>
+                                                <span className="font-medium text-[#1F2937]">
+                                                    {result.name}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {result.date}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="font-bold text-[#1F2937]">
+                                                {result.score}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 bg-gray-200 rounded-full h-2 w-24">
+                                                    <div
+                                                        className={`h-2 rounded-full ${result.percentage >= 86 ? 'bg-[#16A34A]' : 'bg-red-500'
+                                                            }`}
+                                                        style={{ width: `${result.percentage}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-sm font-medium text-gray-600">
+                                                    {result.percentage}%
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {result.status === 'Geslaagd' ? (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#16A34A] text-white">
+                                                    <CheckCircle size={14} />
+                                                    Geslaagd
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-red-500 text-white">
+                                                    <XCircle size={14} />
+                                                    Gezakt
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
                                 ))}
-                            </div>
-                        </div>
-
-                        {/* Quick Actions / Status */}
-                        <div className="bg-slate-900 rounded-2xl shadow-sm border border-slate-800 p-6 text-white">
-                            <h3 className="font-bold text-lg mb-4 text-amber-500">Systeem Status</h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center p-4 bg-slate-800 rounded-xl">
-                                    <span>Server Status</span>
-                                    <span className="flex items-center gap-2 text-green-400 text-sm font-bold">
-                                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                        Online
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center p-4 bg-slate-800 rounded-xl">
-                                    <span>Database</span>
-                                    <span className="flex items-center gap-2 text-green-400 text-sm font-bold">
-                                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                        Verbonden
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </main>
