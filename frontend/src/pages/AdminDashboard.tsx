@@ -1,11 +1,13 @@
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
     BarChart3, Users, BookOpen, TrendingUp, LogOut,
-    UserPlus, Activity, CheckCircle, XCircle
+    UserPlus, Activity, CheckCircle, XCircle, Plus
 } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
     const kpiCards = [
         {
@@ -75,8 +77,8 @@ const AdminDashboard = () => {
                         <button
                             key={item.name}
                             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${item.active
-                                    ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             <item.icon size={22} />
@@ -104,11 +106,20 @@ const AdminDashboard = () => {
             {/* Main Content */}
             <main className="flex-1 ml-72 p-8">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-[#1F2937] mb-2">
-                        Beheerderspaneel
-                    </h1>
-                    <p className="text-gray-600">Overzicht van je Slagie platform</p>
+                <div className="mb-8 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-[#1F2937] mb-2">
+                            Beheerderspaneel
+                        </h1>
+                        <p className="text-gray-600">Overzicht van je Slagie platform</p>
+                    </div>
+                    <button
+                        onClick={() => navigate('/admin/create-exam')}
+                        className="px-6 py-3 bg-[#FF7A00] text-white rounded-xl font-bold hover:bg-[#E56D00] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105"
+                    >
+                        <Plus size={20} />
+                        Nieuw Examen Aanmaken
+                    </button>
                 </div>
 
                 {/* KPI Cards */}

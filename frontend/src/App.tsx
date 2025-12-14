@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentDashboard from './pages/StudentDashboard';
+import CreateExam from './pages/admin/CreateExam';
 
 function App() {
     return (
@@ -31,6 +32,14 @@ function App() {
                         element={
                             <ProtectedRoute requiredRole="admin">
                                 <AdminDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/create-exam"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <CreateExam />
                             </ProtectedRoute>
                         }
                     />

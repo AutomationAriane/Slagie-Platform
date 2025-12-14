@@ -1,11 +1,43 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
     Home, AlertOctagon, TrafficCone, FileText, LogOut,
-    TrendingUp, ListChecks, Calendar, Rocket, Target, Clock
+    TrendingUp, ListChecks, Calendar, Rocket, Target, Clock, ArrowRight
 } from 'lucide-react';
+import axios from 'axios';
+
+interface Exam {
+    id: number;
+    title: string;
+    description: string;
+    cover_image: string;
+    time_limit: number;
+    passing_score: number;
+    category: string;
+    is_published: boolean;
+    created_at: string;
+}
 
 const StudentDashboard = () => {
     const { user, logout } = useAuth();
+    const [exams, setExams] = useState<Exam[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch published exams
+    useEffect(() => {
+        fetchExams();
+    }, []);
+
+    const fetchExams = async () => {
+        try {
+            const response = await axios.get('http://localhost:8000/api/student/exams');
+            setExams(response.data);
+        } catch (error) {
+            console.error('Error fetching exams:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const stats = [
         {
@@ -64,8 +96,8 @@ const StudentDashboard = () => {
                         <button
                             key={item.name}
                             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${item.active
-                                    ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             <item.icon size={22} />
@@ -78,7 +110,7 @@ const StudentDashboard = () => {
                 <div className="p-4 border-t border-white/10">
                     <div className="mb-3 px-4 py-3 bg-white/5 rounded-xl">
                         <p className="text-sm text-gray-400">Ingelogd als</p>
-                        <p className="font-medium text-white truncate">{user?.name || 'Student'}</p>
+                        <p className="font-medium text-white truncate">{user?.email || 'Student'}</p>
                     </div>
                     <button
                         onClick={logout}
@@ -95,7 +127,7 @@ const StudentDashboard = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-[#1F2937] mb-2">
-                        Welkom terug, <span className="text-[#0A66FF]">{user?.name || 'Student'}</span>!
+                        Welkom terug, <span className="text-[#0A66FF]">{user?.email?.split('@')[0] || 'Student'}</span>!
                     </h1>
                     <p className="text-gray-600">Klaar om je voorbereiding te vervolgen?</p>
                 </div>
@@ -137,6 +169,91 @@ const StudentDashboard = () => {
                     </div>
                 </div>
 
+                {/* Beschikbare Proefexamens */}
+                <div className="mb-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-[#1F2937] flex items-center gap-2">
+                            <FileText size={28} className="text-[#0A66FF]" />
+                            Beschikbare Proefexamens
+                        </h2>
+                        {exams.length > 0 && (
+                            <span className="px-3 py-1 bg-[#0A66FF]/10 text-[#0A66FF] rounded-full text-sm font-bold">
+                                {exams.length} beschikbaar
+                            </span>
+                        )}
+                    </div>
+
+                    {loading ? (
+                        <div className="text-center py-12">
+                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#0A66FF] border-t-transparent"></div>
+                            <p className="text-gray-500 mt-4">Examens laden...</p>
+                        </div>
+                    ) : exams.length === 0 ? (
+                        <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center">
+                            <FileText size={48} className="mx-auto text-gray-400 mb-4" />
+                            <h3 className="text-xl font-bold text-gray-700 mb-2">Nog geen examens beschikbaar</h3>
+                            <p className="text-gray-500">Er zijn momenteel geen gepubliceerde examens. Kom later terug!</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {exams.map((exam) => (
+                                <div
+                                    key={exam.id}
+                                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all group"
+                                >
+                                    {/* Cover Image */}
+                                    <div className="relative h-40 bg-gradient-to-br from-[#0A66FF] to-[#0055DD] overflow-hidden">
+                                        {exam.cover_image ? (
+                                            <img
+                                                src={exam.cover_image}
+                                                alt={exam.title}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <FileText size={48} className="text-white/30" />
+                                            </div>
+                                        )}
+                                        <div className="absolute top-3 right-3">
+                                            <span className="px-3 py-1 bg-[#FF7A00] text-white text-xs font-bold rounded-full">
+                                                {exam.category}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold text-[#1F2937] mb-2 group-hover:text-[#0A66FF] transition-colors">
+                                            {exam.title}
+                                        </h3>
+                                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                                            {exam.description || 'Geen beschrijving beschikbaar'}
+                                        </p>
+
+                                        {/* Exam Info */}
+                                        <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
+                                            <div className="flex items-center gap-1">
+                                                <Clock size={16} />
+                                                <span>{exam.time_limit} min</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Target size={16} />
+                                                <span>{exam.passing_score}% slagen</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Start Button */}
+                                        <button className="w-full py-3 bg-[#0A66FF] text-white rounded-xl font-bold hover:bg-[#0055DD] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg group-hover:scale-105">
+                                            <span>Start Examen</span>
+                                            <ArrowRight size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 {/* Recent Activity */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-6">
@@ -159,8 +276,8 @@ const StudentDashboard = () => {
                                 <div className="text-right">
                                     <p className="font-bold text-[#1F2937]">{activity.score}</p>
                                     <span className={`text-xs font-bold px-2 py-1 rounded ${activity.status === 'Geslaagd'
-                                            ? 'bg-[#16A34A]/10 text-[#16A34A]'
-                                            : 'bg-[#FF7A00]/10 text-[#FF7A00]'
+                                        ? 'bg-[#16A34A]/10 text-[#16A34A]'
+                                        : 'bg-[#FF7A00]/10 text-[#FF7A00]'
                                         }`}>
                                         {activity.status}
                                     </span>

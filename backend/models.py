@@ -109,3 +109,77 @@ class QuizAttempt(Base):
 
     def __repr__(self):
         return f"<QuizAttempt(id={self.id}, user={self.user_id}, score={self.score}/{self.total_questions})>"
+
+
+# ==================== EXAM MANAGEMENT MODELS ====================
+
+class Exam(Base):
+    """Admin-created exams with publish/draft functionality"""
+    __tablename__ = "exams"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    cover_image = Column(String(500))  # URL or file path
+    
+    # Exam settings
+    time_limit = Column(Integer)  # Minutes
+    passing_score = Column(Integer)  # Percentage (e.g., 86)
+    category = Column(String(100))  # "Theorie", "Gevaarherkenning", etc.
+    
+    # CRITICAL: Publish/Draft status
+    is_published = Column(Boolean, default=False, nullable=False)
+    
+    # Metadata
+    created_by = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    published_at = Column(DateTime(timezone=True))
+    
+    # Relationships
+    questions = relationship("ExamQuestion", back_populates="exam", cascade="all, delete-orphan")
+    creator = relationship("User", foreign_keys=[created_by])
+    
+    def __repr__(self):
+        status = "Published" if self.is_published else "Draft"
+        return f"<Exam(id={self.id}, title={self.title}, status={status})>"
+
+
+class ExamQuestion(Base):
+    """Questions belonging to admin-created exams"""
+    __tablename__ = "exam_questions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    exam_id = Column(Integer, ForeignKey("exams.id"), nullable=False)
+    
+    # Question content
+    question_text = Column(Text, nullable=False)
+    question_image = Column(String(500))  # Optional image URL
+    question_type = Column(String(50), default="multiple_choice")  # "multiple_choice", "true_false"
+    order = Column(Integer, default=0)  # Order in exam
+    
+    # Relationships
+    exam = relationship("Exam", back_populates="questions")
+    answers = relationship("ExamAnswer", back_populates="question", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<ExamQuestion(id={self.id}, exam_id={self.exam_id}, text={self.question_text[:30]}...)>"
+
+
+class ExamAnswer(Base):
+    """Answer options for exam questions"""
+    __tablename__ = "exam_answers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    question_id = Column(Integer, ForeignKey("exam_questions.id"), nullable=False)
+    
+    answer_text = Column(String(500), nullable=False)
+    is_correct = Column(Boolean, default=False, nullable=False)
+    order = Column(Integer, default=0)  # Order of answer (A, B, C, D)
+    
+    # Relationship
+    question = relationship("ExamQuestion", back_populates="answers")
+    
+    def __repr__(self):
+        status = "✓" if self.is_correct else "✗"
+        return f"<ExamAnswer(id={self.id}, text={self.answer_text[:20]}... {status})>"

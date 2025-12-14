@@ -37,11 +37,11 @@ You can use **ANY** email and password to log in. The system is programmed to ac
 **Recommended Test Credentials:**
 
 **Admin:**
-- **Email**: `admin@slagie.nl`
+- **Email**: `admin@test.nl`
 - **Password**: `admin123`
 
 **Student:**
-- **Email**: `student@slagie.nl`
+- **Email**: `student@test.nl`
 - **Password**: `student123`
 
 *(Clicking "Inloggen" will simply set a dummy admin user in the session and redirect you to the Admin Dashboard).*
