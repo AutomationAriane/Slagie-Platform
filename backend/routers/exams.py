@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime
 
 from database import get_db
-from models import Exam, ExamQuestion, ExamAnswer, User
+from models import Exam, ExamQuestionItem, ExamAnswerOption, User
 from routers.auth import get_current_user
 
 router = APIRouter(prefix="/api", tags=["exams"])
@@ -89,7 +89,7 @@ class ExamListItem(BaseModel):
     passing_score: Optional[int]
     category: Optional[str]
     is_published: bool
-    created_at: datetime
+    created_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
@@ -127,26 +127,27 @@ def create_exam(
     db.flush()  # Get exam ID
     
     # Add questions and answers
+    question_items = []
     for q_data in exam_data.questions:
-        question = ExamQuestion(
-            exam_id=new_exam.id,
+        question = ExamQuestionItem(
             question_text=q_data.question_text,
             question_image=q_data.question_image,
-            question_type=q_data.question_type,
-            order=q_data.order
+            question_type=q_data.question_type
         )
-        db.add(question)
-        db.flush()
         
         # Add answers
         for a_data in q_data.answers:
-            answer = ExamAnswer(
-                question_id=question.id,
+            answer = ExamAnswerOption(
                 answer_text=a_data.answer_text,
                 is_correct=a_data.is_correct,
                 order=a_data.order
             )
-            db.add(answer)
+            question.answers.append(answer)
+        
+        question_items.append(question)
+    
+    # Link questions to exam via M2M relationship
+    new_exam.questions = question_items
     
     db.commit()
     db.refresh(new_exam)

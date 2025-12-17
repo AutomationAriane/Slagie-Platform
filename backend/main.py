@@ -4,6 +4,8 @@ Driving Theory Exam Platform (CBR)
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 
 from database import Base, engine
 from routers import auth, exams
@@ -35,6 +37,13 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router)
 app.include_router(exams.router)
+
+# Mount static files for images
+static_path = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_path):
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
+else:
+    print(f"⚠️  Warning: Static directory not found at {static_path}")
 
 @app.get("/health")
 def health_check():

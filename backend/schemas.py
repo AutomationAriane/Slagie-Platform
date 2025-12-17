@@ -95,3 +95,70 @@ class QuizAttemptCreate(BaseModel):
     score: int
     total_questions: int
     passed: bool
+
+
+# ============ EXAM SYSTEM (Admin-Created Exams) ============
+
+class ExamAnswerOptionSchema(BaseModel):
+    """Answer option for exam questions"""
+    id: int
+    answer_text: str
+    is_correct: bool
+    order: int
+
+    class Config:
+        from_attributes = True
+
+
+class ExamQuestionSchema(BaseModel):
+    """Question in an exam with answer options"""
+    id: int
+    question_text: str
+    question_image: Optional[str] = None
+    question_type: str
+    answers: List[ExamAnswerOptionSchema]
+
+    class Config:
+        from_attributes = True
+
+
+class ExamListSchema(BaseModel):
+    """Simplified exam for list views (no questions)"""
+    id: int
+    title: str
+    description: Optional[str] = None
+    cover_image: Optional[str] = None
+    time_limit: Optional[int] = None
+    passing_score: Optional[int] = None
+    category: Optional[str] = None
+    is_published: bool
+
+    class Config:
+        from_attributes = True
+
+
+class ExamDetailSchema(BaseModel):
+    """Full exam with all questions and answers"""
+    id: int
+    title: str
+    description: Optional[str] = None
+    cover_image: Optional[str] = None
+    time_limit: Optional[int] = None
+    passing_score: Optional[int] = None
+    category: Optional[str] = None
+    is_published: bool
+    questions: List[ExamQuestionSchema] = []
+
+    class Config:
+        from_attributes = True
+
+
+class ExamUpdateSchema(BaseModel):
+    """Schema for updating exam metadata"""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    cover_image: Optional[str] = None
+    time_limit: Optional[int] = None
+    passing_score: Optional[int] = None
+    category: Optional[str] = None
+    is_published: Optional[bool] = None

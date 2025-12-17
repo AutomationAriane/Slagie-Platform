@@ -1,13 +1,6 @@
 """
 Seed Users Script - Create admin and student test users
-Run from backend directory: python seed_users.py
 """
-import sys
-from pathlib import Path
-
-# Add parent directory to path
-sys.path.append(str(Path(__file__).parent))
-
 from database import SessionLocal, engine
 from models import Base, User
 from passlib.context import CryptContext
