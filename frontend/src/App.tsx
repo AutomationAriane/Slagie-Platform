@@ -7,6 +7,11 @@ import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import CreateExam from './pages/admin/CreateExam';
+import EditExam from './pages/admin/EditExam';
+import CreateCourse from './pages/admin/CreateCourse';
+import EditCourse from './pages/admin/EditCourse';
+import QuizPage from './pages/student/QuizPage';
+import ChatPage from './pages/student/ChatPage';
 
 function App() {
     return (
@@ -18,12 +23,32 @@ function App() {
 
                     {/* Student Routes */}
                     <Route
-                        path="/dashboard"
+                        path="/dashboard/chat"
+                        element={
+                            <ProtectedRoute requiredRole="student">
+                                <ChatPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard/examens"
                         element={
                             <ProtectedRoute requiredRole="student">
                                 <StudentDashboard />
                             </ProtectedRoute>
                         }
+                    />
+                    <Route
+                        path="/dashboard/examens/:examId"
+                        element={
+                            <ProtectedRoute requiredRole="student">
+                                <QuizPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard"
+                        element={<Navigate to="/dashboard/examens" replace />}
                     />
 
                     {/* Admin Routes */}
@@ -40,6 +65,32 @@ function App() {
                         element={
                             <ProtectedRoute requiredRole="admin">
                                 <CreateExam />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/exams/:id/edit"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <EditExam />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Course Routes */}
+                    <Route
+                        path="/admin/create-course"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <CreateCourse />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/courses/:id/edit"
+                        element={
+                            <ProtectedRoute requiredRole="admin">
+                                <EditCourse />
                             </ProtectedRoute>
                         }
                     />

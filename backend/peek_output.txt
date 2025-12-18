@@ -1,0 +1,22 @@
+[0] Vraagnummer
+[1] Vraagtekst
+[2] Antwoord
+[3] Optie A
+[4] Optie B
+[5] Optie C
+[6] Optie D
+[7] Vraagtype
+[8] CBR Thema
+[9] Onderwerp
+[10] Foto
+[0] 11/50
+[1] Wat is hier het grootste risico?
+[2] Dat de vrachtauto de bocht te ruim gaat nemen
+[3] Dat de vrachtauto de bocht te ruim gaat nemen
+[4] Dat de witte auto de rode auto niet ziet
+[5] Dat de rode auto de witte auto niet ziet
+[6] None
+[7] Meerkeuze
+[8] Gevaarherkenning
+[9] Verantwoorde verkeersdeelname en milieubewust rijden
+[10] None

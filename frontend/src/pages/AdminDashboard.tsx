@@ -87,8 +87,8 @@ const AdminDashboard = () => {
                             key={item.name}
                             onClick={() => setActiveView(item.view)}
                             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${activeView === item.view
-                                    ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-white/10 text-[#FF7A00] border-l-4 border-[#FF7A00]'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             <item.icon size={22} />

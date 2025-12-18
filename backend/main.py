@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from database import Base, engine
-from routers import auth, exams
+from routers import auth, exams, courses, chat
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -35,8 +35,10 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(exams.router)
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(courses.router, prefix="/api/v1", tags=["courses"])
+app.include_router(exams.router, prefix="/api", tags=["exams"])
+app.include_router(chat.router, prefix="/api", tags=["chat"])
 
 # Mount static files for images
 static_path = os.path.join(os.path.dirname(__file__), "static")

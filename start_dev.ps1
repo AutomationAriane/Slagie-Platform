@@ -2,7 +2,7 @@ Write-Host "Starting Slagie Platform..." -ForegroundColor Green
 
 # Start Backend (Port 8000)
 Write-Host "Starting Backend..."
-Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "cd backend; .\venv\Scripts\activate; uvicorn app.main:app --port 8000 --reload"
+Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "cd backend; .\venv\Scripts\activate; uvicorn main:app --port 8000 --reload"
 
 # Start Frontend (Port 5173)
 Write-Host "Starting Frontend..."

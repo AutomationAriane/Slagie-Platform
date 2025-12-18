@@ -8,10 +8,10 @@ from typing import Optional
 from database import get_db
 from models import User
 from auth import verify_password, get_password_hash, create_access_token, decode_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from dependencies import get_current_user, oauth2_scheme
 from jose import JWTError
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+router = APIRouter(tags=["auth"])
 
 # Pydantic schemas
 class UserCreate(BaseModel):
@@ -36,26 +36,6 @@ class Token(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-
-# Helper function to get current user from token
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = decode_access_token(token)
-        user_id: int = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise credentials_exception
-    return user
 
 # Endpoints
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -107,7 +87,7 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "email": user.email, "role": user.role},
+        data={"sub": str(user.id), "email": user.email, "role": user.role},
         expires_delta=access_token_expires
     )
     

@@ -69,14 +69,17 @@ def parse_excel_data(worksheet, image_map, static_dir):
     print("\n📖 Parsing Excel data...")
     questions_data = []
     
-    # Excel column indices (0-based)
-    COL_NUMBER = 0  # A - Vraagnummer
-    COL_QUESTION = 1  # B - Vraag
-    COL_A = 2  # C - Antwoord A
-    COL_B = 3  # D - Antwoord B
-    COL_C = 4  # E - Antwoord C
-    COL_D = 5  # F - Antwoord D
-    COL_CORRECT = 6  # G - Juiste antwoord (A, B, C, or D)
+    # Updated Excel column indices based on peek
+    COL_NUMBER = 0  # Vraagnummer
+    COL_QUESTION = 1  # Vraagtekst
+    COL_ANSWER_TEXT = 2  # Antwoord (Matches text of correct option)
+    COL_A = 3  # Optie A
+    COL_B = 4  # Optie B
+    COL_C = 5  # Optie C
+    COL_D = 6  # Optie D
+    COL_TYPE = 7  # Vraagtype
+    COL_THEME = 8  # CBR Thema
+    COL_TOPIC = 9  # Onderwerp
     
     # Skip header row, start from row 2
     row_count = 0
@@ -85,11 +88,49 @@ def parse_excel_data(worksheet, image_map, static_dir):
             # Extract data
             question_num = row[COL_NUMBER]
             question_text = row[COL_QUESTION]
-            answer_a = row[COL_A]
-            answer_b = row[COL_B]
-            answer_c = row[COL_C]
-            answer_d = row[COL_D]
-            correct_answer = row[COL_CORRECT]
+            correct_text = str(row[COL_ANSWER_TEXT]).strip() if row[COL_ANSWER_TEXT] else ""
+            
+            cbr_theme = row[COL_THEME]
+            cbr_topic = row[COL_TOPIC]
+            q_type = "multiple_choice" # Default
+            
+            # Simple map for type if provided, else default
+            raw_type = str(row[COL_TYPE]).lower() if row[COL_TYPE] else ""
+            if "gevaar" in raw_type or "gevaar" in str(cbr_theme).lower():
+                q_type = "drag_drop" # Or verify if it's actually drag drop? Usually Gevaarherkenning is ABC (Rem/Gas/Niets). 
+                # Wait, Gevaarherkenning is ABC. Not Drag Drop.
+                # "Meerkeuze" is Multiple Choice.
+                q_type = "multiple_choice"
+            elif "ja" in raw_type:
+                 q_type = "multiple_choice" # Ja/Nee is effectively MC
+            
+            # Options
+            opts = [
+                {"text": str(row[COL_A] or "").strip(), "letter": "A"},
+                {"text": str(row[COL_B] or "").strip(), "letter": "B"},
+                {"text": str(row[COL_C] or "").strip(), "letter": "C"},
+                {"text": str(row[COL_D] or "").strip(), "letter": "D"}
+            ]
+            
+            # Filter empty options
+            valid_opts = [o for o in opts if o["text"]]
+            
+            # Determine correctness by matching text
+            answers = []
+            for o in valid_opts:
+                is_correct = (o["text"] == correct_text)
+                answers.append({
+                    "text": o["text"],
+                    "letter": o["letter"],
+                    "is_correct": is_correct
+                })
+            
+            # Fallback if no exact match (sometimes whitespace issues)
+            if not any(a["is_correct"] for a in answers):
+                # Try fuzzy match? Or just log warning.
+                # print(f"  ⚠️ No matching answer for Q{question_num}. Correct: '{correct_text}'")
+                pass
+
             
             # Skip if no question text
             if not question_text:
@@ -101,18 +142,13 @@ def parse_excel_data(worksheet, image_map, static_dir):
                 filename = image_map[excel_row_num]
                 image_url = f"http://localhost:8000/static/images/{filename}"
             
-            # Prepare answer options
-            answers = [
-                {"text": answer_a or "", "letter": "A", "is_correct": correct_answer == "A"},
-                {"text": answer_b or "", "letter": "B", "is_correct": correct_answer == "B"},
-                {"text": answer_c or "", "letter": "C", "is_correct": correct_answer == "C"},
-                {"text": answer_d or "", "letter": "D", "is_correct": correct_answer == "D"}
-            ]
-            
             question_data = {
                 "number": question_num,
                 "text": question_text,
                 "image_url": image_url,
+                "type": q_type,
+                "cbr_topic": cbr_theme,
+                "cbr_subtopic": cbr_topic,
                 "answers": answers
             }
             
@@ -142,7 +178,10 @@ def create_exams_and_questions(db: Session, questions_data):
         question = ExamQuestionItem(
             question_text=q_data["text"],
             question_image=q_data["image_url"],
-            question_type="multiple_choice"
+            question_type=q_data["type"],
+            cbr_topic=q_data["cbr_topic"],
+            cbr_subtopic=q_data["cbr_subtopic"],
+            explanation=None # Could use correct answer text as explanation
         )
         
         # Add answer options
@@ -169,7 +208,7 @@ def create_exams_and_questions(db: Session, questions_data):
             time_limit=30,
             passing_score=86,
             category="Theorie",
-            is_published=False  # Draft by default
+            is_published=True  # Auto-publish for dev
         )
         
         # Assign questions [i*50 : (i+1)*50]

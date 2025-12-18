@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Table
+from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Table, Float
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
@@ -174,6 +174,11 @@ class ExamQuestionItem(Base):
     question_image = Column(String(500))  # Optional image URL
     question_type = Column(String(50), default="multiple_choice")
     
+    # CBR Metadata
+    cbr_topic = Column(String(255))  # e.g. "Gevaarherkenning"
+    cbr_subtopic = Column(String(255))  # e.g. "Verantwoorde verkeersdeelname..."
+    explanation = Column(Text)  # Optional manual explanation if added later
+    
     # Relationships
     exams = relationship(
         "Exam",
@@ -197,9 +202,99 @@ class ExamAnswerOption(Base):
     is_correct = Column(Boolean, default=False, nullable=False)
     order = Column(Integer, default=0)  # Order of answer (0=A, 1=B, 2=C, 3=D)
     
+    # Drag & Drop Coordinates (Percentage 0-100)
+    x_position = Column(Float, nullable=True)
+    y_position = Column(Float, nullable=True)
+    
     # Relationship
     question = relationship("ExamQuestionItem", back_populates="answers")
     
     def __repr__(self):
         status = "✓" if self.is_correct else "✗"
         return f"<ExamAnswerOption(id={self.id}, text={self.answer_text[:20]}... {status})>"
+
+
+# ==================== LMS COURSE SYSTEM ====================
+
+class Course(Base):
+    """Video Courses (LMS)"""
+    __tablename__ = "courses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    cover_image = Column(String(500))
+    
+    # Metadata
+    is_published = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    modules = relationship("CourseModule", back_populates="course", cascade="all, delete-orphan")
+
+class CourseModule(Base):
+    """Modules within a course"""
+    __tablename__ = "course_modules"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    title = Column(String(255), nullable=False)
+    order = Column(Integer, default=0)
+    
+    # Relationships
+    course = relationship("Course", back_populates="modules")
+    lessons = relationship("CourseLesson", back_populates="module", cascade="all, delete-orphan")
+
+class CourseLesson(Base):
+    """Lessons with video content"""
+    __tablename__ = "course_lessons"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    module_id = Column(Integer, ForeignKey("course_modules.id"), nullable=False)
+    title = Column(String(255), nullable=False)
+    content = Column(Text) # Markdown/Text content
+    video_url = Column(String(500)) # Vimeo/YouTube/MP4 URL
+    duration_minutes = Column(Integer, default=0)
+    order = Column(Integer, default=0)
+    
+    # Relationships
+    module = relationship("CourseModule", back_populates="lessons")
+
+class UserQuestionResponse(Base):
+    """Granular tracking of user answers for topic analysis"""
+    __tablename__ = "user_question_responses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("exam_question_items.id"), nullable=False)
+    exam_id = Column(Integer, ForeignKey("exams.id"), nullable=True) # Context (which exam)
+    
+    is_correct = Column(Boolean, nullable=False)
+    selected_answer_id = Column(Integer, ForeignKey("exam_answer_options.id"), nullable=True)
+    open_answer_text = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    user = relationship("User")
+    question = relationship("ExamQuestionItem")
+
+class UserExamAttempt(Base):
+    """Tracks overall exam attempts"""
+    __tablename__ = "user_exam_attempts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    exam_id = Column(Integer, ForeignKey("exams.id"), nullable=False)
+    
+    score = Column(Integer, default=0) # Number of correct answers
+    total_questions = Column(Integer, default=0)
+    is_passed = Column(Boolean, default=False)
+    
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    user = relationship("User")
+    exam = relationship("Exam")
